@@ -1,6 +1,10 @@
 # cache_service/cache.py
 import logging
 from collections import OrderedDict
+import sqlite3
+import os
+from config import DB_PATH
+import json
 
 # Configure logging
 logger = logging.getLogger("CachingService")
@@ -38,38 +42,77 @@ class Entity:
         return f"Entity(id={self.entity_id}, data={self.data})"
 
 
-class SimulatedDatabase:
-    """Simulates a database for entity storage."""
+class SQLiteDatabase:
+    """SQLite-based database for entity storage."""
 
     def __init__(self):
-        self._data = {}
+        db_dir = os.path.dirname(DB_PATH)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+        self.connection = sqlite3.connect(DB_PATH)
+        self._create_table()
+
+    def _connect(self):
+        return sqlite3.connect(DB_PATH)
+
+    def _create_table(self):
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS entities (
+                    id TEXT PRIMARY KEY,
+                    data TEXT
+                )
+            """
+            )
+            conn.commit()
 
     def save(self, entity):
         try:
-            self._data[entity.getId()] = entity
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "REPLACE INTO entities (id, data) VALUES (?, ?)",
+                    (entity.getId(), json.dumps(entity.data)),
+                )
+                conn.commit()
         except Exception as e:
-            logger.error(f"Error saving entity {entity.getId()} to database: {e}")
+            logger.error(f"Error saving entity {entity.getId()} to SQLite DB: {e}")
             raise
 
     def get(self, entity_id):
         try:
-            return self._data.get(entity_id)
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT data FROM entities WHERE id = ?", (entity_id,))
+                row = cursor.fetchone()
+                if row:
+                    data = json.loads(row[0])
+                    return Entity(entity_id, data)
+                return None
         except Exception as e:
-            logger.error(f"Error getting entity {entity_id} from database: {e}")
+            logger.error(f"Error getting entity {entity_id} from SQLite DB: {e}")
             raise
 
     def remove(self, entity):
         try:
-            self._data.pop(entity.getId(), None)
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM entities WHERE id = ?", (entity.getId(),))
+                conn.commit()
         except Exception as e:
-            logger.error(f"Error removing entity {entity.getId()} from database: {e}")
+            logger.error(f"Error removing entity {entity.getId()} from SQLite DB: {e}")
             raise
 
     def removeAll(self):
         try:
-            self._data.clear()
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM entities")
+                conn.commit()
         except Exception as e:
-            logger.error(f"Error removing all entities from database: {e}")
+            logger.error("Error removing all entities from SQLite DB: {e}")
             raise
 
 
@@ -88,20 +131,35 @@ class CachingService:
     def __init__(self, max_size):
         self._max_size = max_size
         self._cache = OrderedDict()
-        self._database = SimulatedDatabase()
+        self._database = SQLiteDatabase()
+
+    def get_cache_keys(self):
+        return list(self._cache.keys())
+
+    def evict_least_used(self):
+        """Evict the least recently used (LRU) entity from the cache."""
+        if self._cache:
+            lru_entity_id, lru_entity = self._cache.popitem(last=False)
+            self._database.save(lru_entity)
+            logger.info(f"Evicted entity {lru_entity_id} to database.")
+        else:
+            logger.info("Cache is empty, nothing to evict.")
 
     def add(self, entity):
         try:
             entity_id = entity.getId()
+            if entity_id is None:
+                raise ValueError("Entity ID cannot be None")
+
             if entity_id in self._cache:
                 self._cache.move_to_end(entity_id)
                 self._cache[entity_id] = entity
             else:
                 if len(self._cache) >= self._max_size:
-                    lru_entity_id, lru_entity = self._cache.popitem(last=False)
-                    self._database.save(lru_entity)
-                    logger.info(f"Evicted entity {lru_entity_id} to database.")
+                    self.evict_least_used()
+
                 self._cache[entity_id] = entity
+
             logger.info(f"Added entity {entity_id} to cache.")
         except Exception as e:
             logger.error(f"Error adding entity {entity.getId()} to cache: {e}")

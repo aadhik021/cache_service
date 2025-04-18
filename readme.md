@@ -1,19 +1,17 @@
 # Caching Service
 
-A simple Python-based caching service using LRU (Least Recently Used) strategy and a simulated database.
-
----
+A Python-based caching service implementing an LRU (Least Recently Used) strategy with SQLite-backed persistence.
 
 ## Features
 
-- LRU caching using `OrderedDict`
-- Configurable maximum size for cache
-- Eviction of least-used entries to simulated database
-- Simulated database for persistence
-- Logging with timestamps and source
-- Exception handling in all operations
-
----
+- LRU cache using `OrderedDict`
+- Configurable cache size
+- SQLite-based simulated database (`SQLDatabase`)
+- Automatic eviction and DB persistence
+- Fallback to DB on cache miss
+- Separate methods for cache clear vs full deletion
+- Robust exception handling
+- Comprehensive unit tests
 
 ## APIs
 
@@ -24,6 +22,17 @@ A simple Python-based caching service using LRU (Least Recently Used) strategy a
 - `clear()` - Clear only the cache
 
 ---
+
+## Testing
+Unit tests are defined in TestCachingService and cover:
+
+✅ Entity addition and retrieval
+✅ LRU eviction enforcement
+✅ Removal from cache and database
+✅ Cache clearing vs full wipe
+✅ Fallback to DB on cache miss
+✅ Handling of invalid inputs
+✅ Edge cases like duplicate addition, empty eviction, or non-existent retrieval
 
 ## Requirements
 
