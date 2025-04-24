@@ -26,13 +26,15 @@ A Python-based caching service implementing an LRU (Least Recently Used) strateg
 ## Testing
 Unit tests are defined in TestCachingService and cover:
 
-✅ Entity addition and retrieval
-✅ LRU eviction enforcement
-✅ Removal from cache and database
-✅ Cache clearing vs full wipe
-✅ Fallback to DB on cache miss
-✅ Handling of invalid inputs
-✅ Edge cases like duplicate addition, empty eviction, or non-existent retrieval
+✅ Entity addition and retrieval: Verifies correct caching and retrieval behavior.
+✅ LRU eviction enforcement: Validates the eviction of the least recently used (LRU) entities.
+✅ Removal from cache and database: Ensures that removal actions clear both cache and database.
+✅ Cache clearing vs full wipe: Compares clearing the cache to fully wiping both the cache and database, ensuring that entities are properly evicted and cleared.
+✅ Fallback to DB on cache miss: Verifies that entities, once evicted or removed from cache, can still be retrieved from the database.
+✅ Handling of invalid inputs: Includes tests for invalid entity additions (e.g., None ID).
+✅ Edge cases: Addresses scenarios like duplicate entity addition, eviction from an empty cache, and retrieval of non-existent entities.
+✅ Eviction and persistence in the database: Confirms that evicted entities are correctly persisted in the database after cache overflow.
+✅ Full cache removal (removeAll): Ensures removeAll clears both the cache and the database when entities are evicted to the database.
 
 ## Requirements
 
