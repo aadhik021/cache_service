@@ -1,0 +1,56 @@
+# Java build files
+/bin/
+/target/
+/out/
+/build/
+
+# VSCode files
+.vscode/
+*.code-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Class and log files
+*.class
+*.log
+
+# Environment and secrets
+# .env
+*.sqlite
+*.db
+
+# IntelliJ IDEA (if used sometimes)
+.idea/
+*.iml
+
+# Maven or Gradle cache (if used later)
+.mvn/
+.gradle/
+build/
+
+# Libs
+/lib/
+
+# Test coverage or reports
+coverage/
+*.exec
+test-output/
+hs_err_pid*
+
+# Mocking config
+mockito-extensions/
+
+# JAR files
+*.jar
+
+# Backup or temp files
+*~
+*.swp
+*.bak
+*.tmp
+
+db/
+sources.txt
+
