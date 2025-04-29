@@ -74,7 +74,7 @@ public class CachingService {
 
     public void evictLeastUsed() {
         if (!cache.isEmpty()) {
-            int evictedId = cache.entrySet().iterator().next().getKey();  // Handle as Integer key
+            int evictedId = cache.firstEntry().getKey();  // Handle as Integer key
             Entity evictedEntity = cache.remove(evictedId);
             try {
                 database.save(evictedEntity);
