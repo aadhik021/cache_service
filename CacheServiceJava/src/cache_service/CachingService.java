@@ -8,7 +8,7 @@ import java.sql.SQLException;
 public class CachingService {
     private static final Logger logger = Logger.getLogger(CachingService.class.getName());
     private final int maxSize;
-    private final Map<Integer, Entity> cache;
+    private final LinkedHashMap<Integer, Entity> cache;
     // private final SQLiteDatabase database;
     private final Database database;
 
